@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/MrAdam/docker-orca-ide/compare/v1.0.1...v1.1.0) (2026-10-12)
+
+
+### Features
+
+* bundle the GitHub CLI ([#10](https://github.com/MrAdam/docker-orca-ide/issues/10)) ([626f567](https://github.com/MrAdam/docker-orca-ide/commit/626f5674b95f80a1e019037ceb75240114438fb1))
+
 ## [1.0.1](https://github.com/MrAdam/docker-orca-ide/compare/v1.0.0...v1.0.1) (2026-10-12)
 
 
