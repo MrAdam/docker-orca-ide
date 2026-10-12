@@ -9,7 +9,7 @@
   ],
   "packageRules": [
     {
-      "matchDepNames": ["stablyai/orca"],
+      "matchDepNames": ["stablyai/orca", "cli/cli"],
       "semanticCommitType": "fix",
       "minimumReleaseAge": "3 days",
       "automerge": true
