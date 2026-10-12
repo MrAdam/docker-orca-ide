@@ -42,17 +42,6 @@ docker logs orca-ide   # 👈 copy the pairing URL
 Then open **Settings → Remote Orca Servers → Add Server** in the Orca desktop app and paste the pairing URL.
 
 <details>
-<summary><b>Unraid</b></summary>
-
-1. Copy [`unraid-template.xml`](unraid-template.xml) to `/boot/config/plugins/dockerMan/templates-user/my-orca-ide.xml`
-2. **Docker → Add Container**, then pick `orca-ide` from the template list
-3. Set **Pairing address** to the server's Tailscale or LAN IP
-
-The template sets `PUID=99` and `PGID=100` (`nobody:users`) to match Unraid's appdata permissions.
-
-</details>
-
-<details>
 <summary><b>Docker Compose</b></summary>
 
 ```yaml
