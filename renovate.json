@@ -19,6 +19,7 @@
     {
       "matchDepNames": ["stablyai/orca"],
       "semanticCommitType": "fix",
+      "minimumReleaseAge": "3 days",
       "automerge": true
     },
     {

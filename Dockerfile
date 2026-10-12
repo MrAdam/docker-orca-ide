@@ -22,7 +22,9 @@ RUN userdel --remove ubuntu \
   && useradd --uid 1000 --user-group --create-home --home-dir /home/orca --shell /bin/bash orca
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 WORKDIR /home/orca
-ENV HOME=/home/orca PATH=/home/orca/.local/bin:$PATH
+# ~/.local/bin is orca-writable, so it's never on root's PATH: entrypoint.sh adds it after the
+# privilege drop, profile.d for `docker exec -u orca ... bash -l` (HOME comes from passwd, not ENV).
+RUN echo 'PATH="$HOME/.local/bin:$PATH"' > /etc/profile.d/orca-path.sh
 # The .deb lacks the orcad serve entry, so go straight to the Electron runtime.
 ENV ORCA_SERVE_RUNTIME=electron
 
@@ -30,4 +32,4 @@ EXPOSE 6768
 VOLUME ["/home/orca"]
 HEALTHCHECK --start-period=60s CMD curl -fsS -o /dev/null http://127.0.0.1:6768/web-index.html || exit 1
 
-ENTRYPOINT ["tini", "--", "entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
