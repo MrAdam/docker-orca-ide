@@ -117,11 +117,16 @@ jobs:
           tags: |
             type=semver,pattern={{version}},value=${{ needs.release-please.outputs.version }}
             type=raw,value=orca-${{ steps.orca.outputs.version }}
-            type=raw,value=latest
-      # imagetools keeps the SBOM/provenance attestations attached to the digest.
+      # metadata-action adds `latest` itself for semver releases. A single-source imagetools
+      # create is a carbon copy: same digest, attestations included. Verified below.
       - name: Tag digest
         env:
           DIGEST: ${{ needs.build.outputs.digest }}
         run: |
           jq -r '.tags[] | "--tag=" + .' <<< "$DOCKER_METADATA_OUTPUT_JSON" \
             | xargs docker buildx imagetools create "$IMAGE@$DIGEST"
+          for tag in $(jq -r '.tags[]' <<< "$DOCKER_METADATA_OUTPUT_JSON"); do
+            got=$(docker buildx imagetools inspect "$tag" --format '{{json .Manifest}}' | jq -r .digest)
+            [ "$got" = "$DIGEST" ] || { echo "$tag -> $got, expected $DIGEST"; exit 1; }
+            echo "$tag -> $got"
+          done
