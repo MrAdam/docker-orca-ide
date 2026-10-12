@@ -9,9 +9,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/"],
+      "managerFilePatterns": ["/^Dockerfile$/", "/^\\.github/workflows/.+\\.ya?ml$/"],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\S+_VERSION=(?<currentValue>\\S+)"
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[^\\n]*?(?:_VERSION=|version: )(?<currentValue>\\S+)"
       ]
     }
   ],
@@ -24,7 +24,7 @@
     },
     {
       "matchUpdateTypes": ["digest", "pin", "pinDigest", "patch", "minor"],
-      "matchManagers": ["dockerfile", "github-actions"],
+      "matchManagers": ["dockerfile", "github-actions", "custom.regex"],
       "minimumReleaseAge": "3 days",
       "automerge": true
     }
