@@ -28,9 +28,14 @@ jobs:
           tags: orca-ide:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - uses: $/.github/actions/test-image
+      - name: Smoke test
+        run: ./smoke-test.sh orca-ide:test
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image: orca-ide:test
+          image-ref: orca-ide:test
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
 
   zizmor:
     name: Lint workflows

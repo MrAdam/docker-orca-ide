@@ -11,11 +11,6 @@ concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
-env:
-  IMAGE: ghcr.io/mradam/orca-ide
-
-# Build once and push by digest (untagged), test that exact digest without push rights,
-# then tag it. What ships is byte-for-byte what was tested, and Trivy never sees a write token.
 jobs:
   release-please:
     name: Release PR
@@ -31,102 +26,47 @@ jobs:
       - id: rp
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
 
-  build:
-    name: Build and push digest
+  publish:
+    name: Publish image
     needs: release-please
     if: needs.release-please.outputs.released == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
-      packages: write # push untagged digest
-    outputs:
-      digest: ${{ steps.build.outputs.digest }}
+      packages: write # push to ghcr.io
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+      # Fresh build, no gha cache (CI can write to it). Trivy runs in CI on this same commit.
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          load: true
+          no-cache: true
+          tags: orca-ide:test
+      - name: Smoke test
+        run: ./smoke-test.sh orca-ide:test
+      - id: orca
+        run: echo "version=$(sed -n 's/^ARG ORCA_VERSION=//p' Dockerfile)" >> "$GITHUB_OUTPUT"
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ${{ env.IMAGE }}
-      # No gha cache: CI (and its third-party actions) can write to it.
-      - id: build
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          no-cache: true
-          labels: ${{ steps.meta.outputs.labels }}
-          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
-          provenance: mode=max
-          sbom: true
-
-  test:
-    name: Test digest
-    needs: build
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    permissions:
-      contents: read
-      packages: read # pull the private image
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull
-        env:
-          DIGEST: ${{ needs.build.outputs.digest }}
-        run: docker pull "$IMAGE@$DIGEST"
-      - uses: $/.github/actions/test-image
-        with:
-          image: ${{ env.IMAGE }}@${{ needs.build.outputs.digest }}
-
-  tag:
-    name: Tag release
-    needs: [release-please, build, test]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      packages: write # add tags to the tested digest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - id: orca
-        run: echo "version=$(sed -n 's/^ARG ORCA_VERSION=//p' Dockerfile)" >> "$GITHUB_OUTPUT"
-      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
-        with:
-          images: ${{ env.IMAGE }}
+          images: ghcr.io/mradam/orca-ide
           tags: |
             type=semver,pattern={{version}},value=${{ needs.release-please.outputs.version }}
             type=raw,value=orca-${{ steps.orca.outputs.version }}
-      # metadata-action adds `latest` itself for semver releases. A single-source imagetools
-      # create is a carbon copy: same digest, attestations included. Verified below.
-      - name: Tag digest
-        env:
-          DIGEST: ${{ needs.build.outputs.digest }}
-        run: |
-          jq -r '.tags[] | "--tag=" + .' <<< "$DOCKER_METADATA_OUTPUT_JSON" \
-            | xargs docker buildx imagetools create "$IMAGE@$DIGEST"
-          for tag in $(jq -r '.tags[]' <<< "$DOCKER_METADATA_OUTPUT_JSON"); do
-            got=$(docker buildx imagetools inspect "$tag" --format '{{json .Manifest}}' | jq -r .digest)
-            [ "$got" = "$DIGEST" ] || { echo "$tag -> $got, expected $DIGEST"; exit 1; }
-            echo "$tag -> $got"
-          done
+      # Login only after testing. The push reuses the tested build's layers from the local builder.
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
