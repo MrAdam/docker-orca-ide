@@ -2,12 +2,14 @@ FROM ubuntu:26.04@sha256:f144425ff09be612d6d9ad965196e9cdc23dae1f42110a8a11a3e9a
 
 # renovate: datasource=github-releases depName=stablyai/orca
 ARG ORCA_VERSION=1.4.224
+# renovate: datasource=github-releases depName=cli/cli
+ARG GH_VERSION=2.102.0
 ARG TARGETARCH
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl git jq openssh-client tini \
+  && apt-get install -y --no-install-recommends ca-certificates curl git jq less openssh-client tini unzip \
   && curl -fsSLo /tmp/orca.deb "https://github.com/stablyai/orca/releases/download/v${ORCA_VERSION}/orca-ide_${ORCA_VERSION}_${TARGETARCH}.deb" \
   # Verify against the digest GitHub records for the release asset.
   && curl -fsSL "https://api.github.com/repos/stablyai/orca/releases/tags/v${ORCA_VERSION}" \
@@ -16,6 +18,14 @@ RUN apt-get update \
   # libasound2t64/libgbm1/xauth: Electron + xvfb-run need them but the .deb omits them.
   && apt-get install -y --no-install-recommends /tmp/orca.deb libasound2t64 libgbm1 xauth \
   && rm -rf /tmp/orca.deb /var/lib/apt/lists/*
+
+# Orca's GitHub features (PRs, reviews, checks) shell out to gh.
+RUN curl -fsSLo /tmp/gh.tar.gz "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${TARGETARCH}.tar.gz" \
+  && curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_checksums.txt" \
+    | grep " gh_${GH_VERSION}_linux_${TARGETARCH}.tar.gz$" \
+    | sed 's|  .*|  /tmp/gh.tar.gz|' | sha256sum -c - \
+  && tar -xzf /tmp/gh.tar.gz -C /usr/local --strip-components=1 "gh_${GH_VERSION}_linux_${TARGETARCH}/bin/gh" \
+  && rm /tmp/gh.tar.gz
 
 # Drop the base image's `ubuntu` user so `orca` can take uid/gid 1000; entrypoint.sh remaps to PUID/PGID.
 RUN userdel --remove ubuntu \

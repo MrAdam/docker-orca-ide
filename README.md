@@ -22,6 +22,7 @@ Orca can run as a remote server: one machine holds the repos, terminals and agen
 ## ✨ What's inside
 
 - 📦 The official Orca `.deb`, checked against the SHA-256 digest of the GitHub release asset
+- 🐙 The GitHub CLI (`gh`), which Orca uses for pull requests, reviews and checks
 - 👤 Runs as an unprivileged user, with configurable `PUID`/`PGID`
 - 🩺 Built-in healthcheck, plus `tini` as PID 1 so agent processes get cleaned up
 - 🔁 Renovate keeps Orca, the base image and the GitHub Actions up to date
@@ -78,6 +79,16 @@ The image doesn't include any agent CLIs. Install them once from a shell in the 
 docker exec -it -u orca orca-ide bash -l
 curl -fsSL https://claude.ai/install.sh | bash
 orca account add --agent claude
+```
+
+## 🐙 GitHub
+
+Orca's GitHub features use the bundled `gh` CLI. Log in once as the `orca` user. The token is stored on the volume:
+
+```sh
+docker exec -it -u orca orca-ide bash -l
+gh auth login
+gh auth setup-git   # optional: lets git use gh for HTTPS push and pull
 ```
 
 ## 🔒 Security
