@@ -25,6 +25,7 @@
     {
       "matchUpdateTypes": ["digest", "pin", "pinDigest", "patch", "minor"],
       "matchManagers": ["dockerfile", "github-actions"],
+      "minimumReleaseAge": "3 days",
       "automerge": true
     }
   ]

@@ -13,7 +13,8 @@ set -- env PATH="$HOME/.local/bin:$PATH" xvfb-run -a /opt/Orca/orca-ide --no-san
 
 PUID=${PUID:-1000}
 PGID=${PGID:-1000}
-[ "$PUID" != 0 ] && [ "$PGID" != 0 ] || { echo "PUID/PGID must not be 0" >&2; exit 1; }
+# Numeric test: rejects 0, 00 and non-numbers alike.
+[ "$PUID" -gt 0 ] 2>/dev/null && [ "$PGID" -gt 0 ] 2>/dev/null || { echo "PUID/PGID must be positive integers" >&2; exit 1; }
 groupmod --non-unique --gid "$PGID" orca
 usermod --non-unique --uid "$PUID" --gid "$PGID" orca >/dev/null
 # Only walk the volume when ownership is wrong (first start or changed PUID/PGID).
