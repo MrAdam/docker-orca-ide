@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.1](https://github.com/MrAdam/docker-orca-ide/compare/v1.0.0...v1.0.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* harden container and release pipeline after security review ([eb52b52](https://github.com/MrAdam/docker-orca-ide/commit/eb52b52ffdedc02cb768d98ce24e1fc214bbf701))
+* numeric PUID/PGID check; 3-day release age for automerged updates ([270c3c4](https://github.com/MrAdam/docker-orca-ide/commit/270c3c47826668e829eafb8339040310280bbbd3))
+* security review hardening ([8532977](https://github.com/MrAdam/docker-orca-ide/commit/85329777797dbffd7e64d169075f1620aace3b14))
+
 ## 1.0.0 (2026-10-12)
 
 
