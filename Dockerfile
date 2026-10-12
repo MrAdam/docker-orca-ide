@@ -9,7 +9,7 @@ ARG TARGETARCH
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates curl git jq less openssh-client tini unzip \
+  && apt-get install -y --no-install-recommends ca-certificates curl git jq openssh-client tini \
   && curl -fsSLo /tmp/orca.deb "https://github.com/stablyai/orca/releases/download/v${ORCA_VERSION}/orca-ide_${ORCA_VERSION}_${TARGETARCH}.deb" \
   # Verify against the digest GitHub records for the release asset.
   && curl -fsSL "https://api.github.com/repos/stablyai/orca/releases/tags/v${ORCA_VERSION}" \
