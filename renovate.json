@@ -4,16 +4,9 @@
     "config:recommended",
     ":semanticCommits",
     "docker:pinDigests",
-    "helpers:pinGitHubActionDigests"
-  ],
-  "customManagers": [
-    {
-      "customType": "regex",
-      "managerFilePatterns": ["/^Dockerfile$/", "/^\\.github/workflows/.+\\.ya?ml$/"],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[^\\n]*?(?:_VERSION=|version: )(?<currentValue>\\S+)"
-      ]
-    }
+    "helpers:pinGitHubActionDigests",
+    "customManagers:dockerfileVersions",
+    "customManagers:githubActionsVersions"
   ],
   "packageRules": [
     {
