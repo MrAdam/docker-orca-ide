@@ -21,14 +21,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Smoke test
-        run: |
-          docker run -d --name orca -e ORCA_PAIRING_ADDRESS=127.0.0.1 orca-ide:ci
-          for i in $(seq 1 30); do
-            [ "$(docker inspect -f '{{.State.Health.Status}}' orca)" = healthy ] && exit 0
-            docker logs orca 2>&1 | grep -q 'Orca server ready' && exit 0
-            sleep 5
-          done
-          docker logs orca; exit 1
+        run: ./smoke-test.sh orca-ide:ci
       - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: orca-ide:ci

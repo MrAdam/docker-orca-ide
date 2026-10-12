@@ -31,7 +31,7 @@ Orca can run as a remote server: one machine holds the repos, terminals and agen
 
 ```sh
 docker run -d --name orca-ide \
-  -p 6768:6768 \
+  -p 100.x.y.z:6768:6768 \
   -e ORCA_PAIRING_ADDRESS=100.x.y.z \
   -v ./orca:/home/orca \
   ghcr.io/mradam/orca-ide:latest
@@ -50,7 +50,7 @@ services:
     image: ghcr.io/mradam/orca-ide:latest
     restart: unless-stopped
     ports:
-      - "6768:6768"
+      - "100.x.y.z:6768:6768"
     environment:
       ORCA_PAIRING_ADDRESS: 100.x.y.z
     volumes:
@@ -75,7 +75,7 @@ Arguments after the image name are passed through to `orca serve`, for example `
 The image doesn't include any agent CLIs. Install them once from a shell in the container, as the `orca` user (`-u orca`). They're stored on the volume, so image updates keep them:
 
 ```sh
-docker exec -it -u orca orca-ide bash
+docker exec -it -u orca orca-ide bash -l
 curl -fsSL https://claude.ai/install.sh | bash
 orca account add --agent claude
 ```
