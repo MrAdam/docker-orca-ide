@@ -1,0 +1,66 @@
+name: Build
+
+# Shared by CI (test only) and Release (test, then push). Permissions come from the caller.
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: Release version to publish. Empty = build and test only.
+        type: string
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RELEASE: ${{ inputs.version != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # Releases build fresh, never from the gha cache that CI (and its third-party actions) can write.
+      - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          load: true
+          tags: orca-ide:test
+          no-cache: ${{ env.RELEASE == 'true' }}
+          cache-from: ${{ env.RELEASE != 'true' && 'type=gha' || '' }}
+          cache-to: ${{ env.RELEASE != 'true' && 'type=gha,mode=max' || '' }}
+      - name: Smoke test
+        run: ./smoke-test.sh orca-ide:test
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: orca-ide:test
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+
+      # Release only: push the tested image (the push build reuses the builder's local layers).
+      - if: env.RELEASE == 'true'
+        id: orca
+        run: echo "version=$(sed -n 's/^ARG ORCA_VERSION=//p' Dockerfile)" >> "$GITHUB_OUTPUT"
+      - if: env.RELEASE == 'true'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - if: env.RELEASE == 'true'
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/mradam/orca-ide
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.version }}
+            type=raw,value=orca-${{ steps.orca.outputs.version }}
+            type=raw,value=latest
+      - if: env.RELEASE == 'true'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
