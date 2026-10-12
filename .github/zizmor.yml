@@ -1,4 +1,0 @@
-rules:
-  # Suggests `$/...` for same-repo reusable workflows; `./...` is the documented form.
-  self-repository:
-    disable: true

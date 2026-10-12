@@ -1,0 +1,22 @@
+name: Test image
+description: Smoke-test and Trivy-scan a local image.
+
+inputs:
+  image:
+    description: Image reference already present in the local Docker daemon.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Smoke test
+      shell: sh
+      env:
+        IMAGE: ${{ inputs.image }}
+      run: ./smoke-test.sh "$IMAGE"
+    - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+      with:
+        image-ref: ${{ inputs.image }}
+        severity: CRITICAL
+        ignore-unfixed: true
+        exit-code: '1'
