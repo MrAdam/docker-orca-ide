@@ -25,7 +25,7 @@ Orca can run as a remote server: one machine holds the repos, terminals and agen
 - 🐙 The GitHub CLI (`gh`), which Orca uses for pull requests, reviews and checks
 - 👤 Runs as an unprivileged user, with configurable `PUID`/`PGID`
 - 🩺 Built-in healthcheck, plus `tini` as PID 1 so agent processes get cleaned up
-- 🔁 Renovate keeps Orca, the base image and the GitHub Actions up to date
+- 🔁 Renovate keeps Orca, `gh`, the base image and the GitHub Actions up to date
 - 🔏 Images ship with an SBOM and build provenance, and Trivy scans every build
 
 ## 🚀 Quick start
