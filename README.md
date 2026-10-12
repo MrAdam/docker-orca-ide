@@ -1,36 +1,108 @@
-# docker-orca-ide
+<div align="center">
 
-Unofficial Docker image running [Orca](https://github.com/stablyai/orca) headless via `orca serve`, so desktop, web and mobile clients can pair with it.
+# 🐋 docker-orca-ide
+
+**Run a headless [Orca](https://github.com/stablyai/orca) server in a container. Your agents keep working after your laptop goes to sleep.**
+
+[![CI](https://github.com/MrAdam/docker-orca-ide/actions/workflows/ci.yml/badge.svg)](https://github.com/MrAdam/docker-orca-ide/actions/workflows/ci.yml)
+[![Release](https://github.com/MrAdam/docker-orca-ide/actions/workflows/release.yml/badge.svg)](https://github.com/MrAdam/docker-orca-ide/actions/workflows/release.yml)
+[![Upstream Orca](https://img.shields.io/github/v/release/stablyai/orca?label=upstream%20orca&logo=github)](https://github.com/stablyai/orca/releases)
+[![Renovate](https://img.shields.io/badge/renovate-enabled-1A1F6C?logo=renovatebot)](https://docs.renovatebot.com)
+[![GHCR](https://img.shields.io/badge/ghcr.io-mradam%2Forca--ide-2496ED?logo=docker&logoColor=white)](https://github.com/MrAdam/docker-orca-ide/pkgs/container/orca-ide)
+
+</div>
+
+---
+
+Orca can run as a remote server: one machine holds the repos, terminals and agent sessions, and you connect to it from the desktop app, the browser or your phone. Upstream ships no container for this, so this repo packages one.
+
+> [!NOTE]
+> This is an unofficial image and isn't affiliated with Stably.
+
+## ✨ What's inside
+
+- 📦 The official Orca `.deb`, checked against the SHA-256 digest of the GitHub release asset
+- 👤 Runs as an unprivileged user, with configurable `PUID`/`PGID`
+- 🩺 Built-in healthcheck, plus `tini` as PID 1 so agent processes get cleaned up
+- 🔁 Renovate keeps Orca, the base image and the GitHub Actions up to date
+- 🔏 Images ship with an SBOM and build provenance, and Trivy scans every build
+
+## 🚀 Quick start
 
 ```sh
-mkdir -p /mnt/user/appdata/orca-ide && chown 99:100 /mnt/user/appdata/orca-ide
 docker run -d --name orca-ide \
   -p 6768:6768 \
   -e ORCA_PAIRING_ADDRESS=100.x.y.z \
-  -v /mnt/user/appdata/orca-ide:/home/orca \
+  -v ./orca:/home/orca \
   ghcr.io/mradam/orca-ide:latest
-docker logs orca-ide   # prints the pairing URL
+
+docker logs orca-ide   # 👈 copy the pairing URL
 ```
 
-Paste the pairing URL into **Settings → Remote Orca Servers → Add Server** in the Orca desktop app. On Unraid, use `unraid-template.xml`.
+Then open **Settings → Remote Orca Servers → Add Server** in the Orca desktop app and paste the pairing URL.
 
-Install and log in to agent CLIs from inside the container (`docker exec -it orca-ide bash`); they persist in `/home/orca`:
+<details>
+<summary><b>Unraid</b></summary>
+
+1. Copy [`unraid-template.xml`](unraid-template.xml) to `/boot/config/plugins/dockerMan/templates-user/my-orca-ide.xml`
+2. **Docker → Add Container**, then pick `orca-ide` from the template list
+3. Set **Pairing address** to the server's Tailscale or LAN IP
+
+The template sets `PUID=99` and `PGID=100` (`nobody:users`) to match Unraid's appdata permissions.
+
+</details>
+
+<details>
+<summary><b>Docker Compose</b></summary>
+
+```yaml
+services:
+  orca-ide:
+    image: ghcr.io/mradam/orca-ide:latest
+    restart: unless-stopped
+    ports:
+      - "6768:6768"
+    environment:
+      ORCA_PAIRING_ADDRESS: 100.x.y.z
+    volumes:
+      - ./orca:/home/orca
+```
+
+</details>
+
+## ⚙️ Configuration
+
+| | Value | Purpose |
+| --- | --- | --- |
+| **Env** | `ORCA_PAIRING_ADDRESS` | *Required.* The address clients connect to, such as a Tailscale IP |
+| **Env** | `PUID` / `PGID` | User and group IDs Orca runs as (default `1000`). The volume is chowned to match |
+| **Port** | `6768` | WebSocket runtime and web client |
+| **Volume** | `/home/orca` | Orca state, agent CLIs, credentials and repos |
+
+Arguments after the image name are passed through to `orca serve`, for example `--mobile-pairing`.
+
+## 🤖 Agents
+
+The image doesn't include any agent CLIs. Install them once from a shell in the container, as the `orca` user (`-u orca`). They're stored on the volume, so image updates keep them:
 
 ```sh
+docker exec -it -u orca orca-ide bash
 curl -fsSL https://claude.ai/install.sh | bash
 orca account add --agent claude
 ```
 
-## Security
+## 🔒 Security
 
-- Keep port 6768 on your LAN or tailnet. Never expose it to the internet.
-- The pairing URL grants full access. Treat it like a password.
-- No keyring in the container, so Orca stores secrets unencrypted in `/home/orca`. Protect that volume.
+> [!WARNING]
+> Whoever has the pairing URL has full shell access to the container.
 
-## Tags
+- Only expose port `6768` on your LAN or tailnet, never to the public internet.
+- There's no keyring in the container, so Orca stores secrets unencrypted on the volume. Protect the volume.
 
-- `latest`: newest release
-- `X.Y.Z`: this repo's release (release-please)
-- `orca-X.Y.Z`: the bundled Orca version
+## 🏷️ Tags
 
-Renovate bumps Orca, the base image and actions; merging the release-please PR publishes the image.
+| Tag | Meaning |
+| --- | --- |
+| `latest` | Newest release |
+| `X.Y.Z` | This repo's release, cut by release-please |
+| `orca-X.Y.Z` | Pinned to a specific upstream Orca version |
