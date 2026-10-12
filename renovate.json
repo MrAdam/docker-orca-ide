@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\nARG \\S+_VERSION=(?<currentValue>\\S+)"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "matchDepNames": ["stablyai/orca"],
+      "semanticCommitType": "fix",
+      "automerge": true
+    },
+    {
+      "matchUpdateTypes": ["digest", "pin", "pinDigest", "patch", "minor"],
+      "matchManagers": ["dockerfile", "github-actions"],
+      "automerge": true
+    }
+  ]
+}
