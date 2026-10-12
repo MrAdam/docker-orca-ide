@@ -17,11 +17,12 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends /tmp/orca.deb libasound2t64 libgbm1 xauth \
   && rm -rf /tmp/orca.deb /var/lib/apt/lists/*
 
-# ponytail: fixed uid 99/gid 100 (Unraid's nobody:users); add PUID/PGID remapping if used elsewhere.
-RUN useradd --uid 99 --gid users --create-home --home-dir /home/orca --shell /bin/bash orca
-USER orca
+# Drop the base image's `ubuntu` user so `orca` can take uid/gid 1000; entrypoint.sh remaps to PUID/PGID.
+RUN userdel --remove ubuntu \
+  && useradd --uid 1000 --user-group --create-home --home-dir /home/orca --shell /bin/bash orca
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 WORKDIR /home/orca
-ENV PATH=/home/orca/.local/bin:$PATH
+ENV HOME=/home/orca PATH=/home/orca/.local/bin:$PATH
 # The .deb lacks the orcad serve entry, so go straight to the Electron runtime.
 ENV ORCA_SERVE_RUNTIME=electron
 
@@ -29,6 +30,4 @@ EXPOSE 6768
 VOLUME ["/home/orca"]
 HEALTHCHECK --start-period=60s CMD curl -fsS -o /dev/null http://127.0.0.1:6768/web-index.html || exit 1
 
-# Electron binary directly: the orca-ide wrapper can't pass --no-sandbox. Mirrors upstream's own Docker tests.
-
-ENTRYPOINT ["tini", "--", "sh", "-c", "exec xvfb-run -a /opt/Orca/orca-ide --no-sandbox serve --port 6768 --pairing-address \"${ORCA_PAIRING_ADDRESS:?set ORCA_PAIRING_ADDRESS}\" \"$@\"", "--"]
+ENTRYPOINT ["tini", "--", "entrypoint.sh"]

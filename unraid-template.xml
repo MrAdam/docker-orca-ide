@@ -13,5 +13,7 @@
   <Icon>https://raw.githubusercontent.com/stablyai/orca/main/resources/icon.png</Icon>
   <Config Name="Port" Target="6768" Default="6768" Mode="tcp" Description="Orca runtime (WebSocket + web client)" Type="Port" Display="always" Required="true">6768</Config>
   <Config Name="Pairing address" Target="ORCA_PAIRING_ADDRESS" Default="" Description="Address clients dial, e.g. the server's Tailscale IP" Type="Variable" Display="always" Required="true"/>
-  <Config Name="Home" Target="/home/orca" Default="/mnt/user/appdata/orca-ide" Mode="rw" Description="Orca state, agent CLIs, credentials and repos. Must be owned by 99:100." Type="Path" Display="always" Required="true">/mnt/user/appdata/orca-ide</Config>
+  <Config Name="Home" Target="/home/orca" Default="/mnt/user/appdata/orca-ide" Mode="rw" Description="Orca state, agent CLIs, credentials and repos" Type="Path" Display="always" Required="true">/mnt/user/appdata/orca-ide</Config>
+  <Config Name="PUID" Target="PUID" Default="99" Description="User ID Orca runs as" Type="Variable" Display="advanced" Required="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Description="Group ID Orca runs as" Type="Variable" Display="advanced" Required="false">100</Config>
 </Container>
