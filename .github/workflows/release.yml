@@ -40,7 +40,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-      # Fresh build, no gha cache (CI can write to it). Trivy runs in CI on this same commit.
+      # Fresh build, no gha cache (CI can write to it).
       - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           load: true
@@ -48,6 +48,12 @@ jobs:
           tags: orca-ide:test
       - name: Smoke test
         run: ./smoke-test.sh orca-ide:test
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: orca-ide:test
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
       - id: orca
         run: echo "version=$(sed -n 's/^ARG ORCA_VERSION=//p' Dockerfile)" >> "$GITHUB_OUTPUT"
       - id: meta
