@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/MrAdam/docker-orca-ide/compare/v1.1.0...v1.1.1) (2026-10-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency stablyai/orca to v1.4.227 ([#14](https://github.com/MrAdam/docker-orca-ide/issues/14)) ([2333a63](https://github.com/MrAdam/docker-orca-ide/commit/2333a635ddd329b492aaf805b8d7d2ad41c69cb4))
+
 ## [1.1.0](https://github.com/MrAdam/docker-orca-ide/compare/v1.0.1...v1.1.0) (2026-10-12)
 
 
