@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/MrAdam/docker-orca-ide/compare/v1.1.5...v1.1.6) (2026-11-21)
+
+
+### Bug Fixes
+
+* **deps:** update dependency cli/cli to v2.105.0 ([#61](https://github.com/MrAdam/docker-orca-ide/issues/61)) ([9175051](https://github.com/MrAdam/docker-orca-ide/commit/9175051d17e117d1811efac8dff5c982d7f88163))
+
 ## [1.1.5](https://github.com/MrAdam/docker-orca-ide/compare/v1.1.4...v1.1.5) (2026-11-16)
 
 
