@@ -1,7 +1,7 @@
 FROM ubuntu:26.04@sha256:d66b366dac61b575bee2aef07e9c26e8070096fbe84a3d4d3eb0da069b5d76db
 
 # renovate: datasource=github-releases depName=stablyai/orca
-ARG ORCA_VERSION=1.4.265
+ARG ORCA_VERSION=1.4.267
 # renovate: datasource=github-releases depName=cli/cli
 ARG GH_VERSION=2.105.0
 ARG TARGETARCH
